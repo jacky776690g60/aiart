@@ -1,0 +1,10 @@
+####################
+# vqgan
+####################
+python vqgan.py -rs 128 128 -i 500 -s output/out.png -tp "Russian squirrel"
+python vqgan.py -rs 256 256 -i 2000 -s out.png -cpe 100 -se 100 -tp "A squirrel:10| with a pilot helmet:5| in a dark forest:3"
+python vqgan.py -rs 256 256 -i 1250 -s out.png -cpe 10 -se 10 -tp "A picture of a squirrel holding red flag | stylish | realistic | artistic" -acc redish
+python vqgan.py -rs 256 256 -i 1250 -s out.png -cpe 10 -se 10 -tp "A picture of a squirrel holding red flag:0.4 | stylish:0.2 | realistic:0.3 | sketch:0.1" -acc redish -ip upscaler\test_imgs\squirrel.png
+python vqgan.py -rs 360 360 -i 2000 -s catSquirrel/out.png -cpe 50 -se 50 -tp "A painting of a hybrid of squirrel and cat holding a red flag | dreamy:0.1 | sketch:0.4" -ip upscaler\test_imgs\squirrel.png upscaler\test_imgs\cat_highres.png -acc redish
+python vqgan.py -rs 360 360 -i 2000 -s picasso/out.png -cpe 50 -se 50 -tp "A painting of Picasso taking selfie | colorful:0.3"
+python vqgan.py -rs 360 360 -i 2000 -s dog/out.png -cpe 50 -se 50 -tp "A dog and a cat watching sunset on the beach | stylish:0.3 | warm:0.2"
