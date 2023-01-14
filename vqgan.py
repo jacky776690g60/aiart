@@ -10,10 +10,12 @@ https://github.com/openai/CLIP
 import sys, os, argparse, warnings, random
 from typing import List, Optional, Tuple, Dict
 from enum import Enum
-sys.path.append(os.path.join(os.getcwd(), 'taming-transformers'))
 from PIL import ImageFile, Image, PngImagePlugin
 import requests
 from pathlib import Path
+sys.path.append(os.path.join(os.getcwd(), 'taming-transformers'))
+# suppress deprecated warnings
+warnings.filterwarnings('ignore', category=UserWarning)
 
 import numpy as np
 import pandas as pd
@@ -35,8 +37,7 @@ from torch.optim import Adam, AdamW, Adagrad, Adamax, RMSprop
 
 from utils.progressbar import ProgressBar, TermArtist
 from vfx import AugmentationSTK, Shader
-# suppress deprecated warnings
-warnings.filterwarnings('ignore', category=UserWarning)
+
 
 import torchtools
 from torchtools import DaVinci, Picasso, Assistant
@@ -79,9 +80,9 @@ parser.add_argument("-conf", "--vqgan_config", type=str, default=f'checkpoints/v
                     help="VQGAN config")
 parser.add_argument("-ckpt", "--vqgan_checkpoint", type=str, default=f'checkpoints/vqgan_imagenet_f16_16384.ckpt', 
                     help="VQGAN checkpoint")
-parser.add_argument("-nps", "--noise_prompt_seeds", nargs="+", type=int, default=[],
+parser.add_argument("-ns", "--noise_prompt_seeds", nargs="+", type=int, default=[],
                     help="Noise prompt seeds")
-parser.add_argument("-npw", "--noise_prompt_weights", nargs="+", type=float, default=[],
+parser.add_argument("-nsw", "--noise_prompt_weights", nargs="+", type=float, default=[],
                     help="Noise prompt weights")
 parser.add_argument("-cuts", "--num_cuts", type=int, default=32, 
                     help="Number of cuts")
@@ -143,25 +144,6 @@ args.save = os.path.join("output", args.save)
 save_dir = os.path.dirname(args.save)
 if not os.path.exists(save_dir):
     os.mkdir(save_dir)
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -309,24 +291,6 @@ def get_weight(prompt):
  
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ◼︎ Gumble distribution
 if gumbel:
     e_dim = 256
@@ -374,10 +338,6 @@ else:
     z = z.view([-1, toksY, toksX, e_dim]).permute(0, 3, 1, 2)
 
 
-
-
-
-
 def get_optimizer(name: str, learning_rate: float=args.learning_rate):
     """
     Get the optimzer based on user inputs
@@ -422,16 +382,6 @@ if args.noise_prompt_weights:
 
 
 
-
-
-
-
-
-
-
-
-
-
 z_orig = z.clone()
 z.requires_grad_(True)
 
@@ -439,27 +389,6 @@ z.requires_grad_(True)
 normalize = transforms.Normalize(mean=[0.48145466, 0.4578275, 0.40821073],
                                  std=[0.26862954, 0.26130258, 0.27577711]
                                 )
-
-
-
-# ◼︎ Original
-# def fit_img(image, out_size):
-#     ratio = image.size[0] / image.size[1]
-#     area = min(image.size[0] * image.size[1], out_size[0] * out_size[1])
-#     size = round((area * ratio)**0.5), round((area / ratio)**0.5)
-#     return image.resize(size, Image.Resampling.LANCZOS)
-
-# ◼︎ Mine
-def fit_img(image, out_size):
-
-    ratio = image.size[0] / image.size[1]
-    area = min(image.size[0] * image.size[1], out_size[0] * out_size[1])
-    size = round((area * ratio)**0.5), round((area / ratio)**0.5)
-    return image.resize(size, Image.Resampling.LANCZOS)
-
-
-
-
 
 
 prompt_models = []
@@ -484,57 +413,47 @@ def feedImg(img_path: str):
 
     return path, weight, stop
 
+
+def feedNoises():
+    weightTmp = [1.] * len(args.noise_prompt_seeds)
+    weightTmp[:len(args.noise_prompt_weights)] = args.noise_prompt_weights[:]
+    
+    for seed, weight in zip(args.noise_prompt_seeds, weightTmp):
+        gen = torch.Generator().manual_seed(seed)
+        embed = torch.empty([1, PERCEPTOR.visual.output_dim]).normal_(generator=gen)
+        prompt_models.append(PromptMDL(embed, weight).to(DEVICE))
+    return args.noise_prompt_seeds, weightTmp
+
+
+
+
 if args.text_prompts == args.image_prompts == None:
     raise RuntimeError("No prompt provided. At least provide text or image prompt.")
 
-
-for seed, weight in zip(args.noise_prompt_seeds, args.noise_prompt_weights):
-    gen = torch.Generator().manual_seed(seed)
-    embed = torch.empty([1, PERCEPTOR.visual.output_dim]).normal_(generator=gen)
-    prompt_models.append(PromptMDL(embed, weight).to(DEVICE))
-
-
-
-
-
-if args.text_prompts:
-    print(args.text_prompts)
-
-
-
-
-
-
-
-
-
-
- 
 
 
 
 
 def train_step(i):
-    lossAll = []
+    losses = []
 
     img_tensor = compose(z)
 
     clip_logits = PERCEPTOR.encode_image(normalize(CUTER_MDL(img_tensor))).float()
 
     if args.init_weight:
-        lossAll.append(TorchNNFunc.mse_loss(z, torch.zeros_like(z_orig)) * 
+        losses.append(TorchNNFunc.mse_loss(z, torch.zeros_like(z_orig)) * 
                     ((1/torch.tensor(i*2 + 1)) * args.init_weight) / 2)
 
     for mdl in prompt_models:
         # print(mdl)
-        lossAll.append(mdl(clip_logits))
+        losses.append(mdl(clip_logits))
 
-    losses_str = ', '.join(f'{loss.item():g}' for loss in lossAll)
+    losses_str = ', '.join(f'{loss.item():g}' for loss in losses)
+    loss = sum(losses)
 
-    print(f'\ti: {i}, loss: {sum(lossAll).item():g}, losses: {losses_str}', end="")
+    print(f'\ti: {i}, total loss: {loss.item():g}, each: {losses_str}', end="")
     
-    loss = sum(lossAll)
-
     optimizer.zero_grad(set_to_none=True)
 
     loss.backward()
@@ -564,7 +483,7 @@ def train_step(i):
 
 
 
-phrase_idx = imgPrompt_idx = 0 
+phr_prm_id = img_prm_idx = noi_prmt_idx = 0 
 progress_bar = ProgressBar(args.iterations, bar_len=50, style=2)
 try:
     for i in range(args.iterations):
@@ -573,9 +492,9 @@ try:
             # ◼︎ Text prompts
             prompt_models = []
             if args.text_prompts:
-                if phrase_idx >= len(sentences): phrase_idx = 0
+                if phr_prm_id >= len(sentences): phr_prm_id = 0
                 
-                cur_sentence = sentences[phrase_idx]
+                cur_sentence = sentences[phr_prm_id]
                 print("\n", "-" * 50)
                 print("Using Sentence: ", cur_sentence)
 
@@ -587,15 +506,21 @@ try:
                     
                     print(f"Text: {txt}{' ' * (minLen - len(txt)-1)}||Weight: {weight}{' ' * (minLen - len(str(weight)) - 1)}||Stop: {stop}")
 
-                phrase_idx += 1
+                phr_prm_id += 1
 
             # ◼︎ Image Prompts
             if args.image_prompts:
-                if imgPrompt_idx >= len(args.image_prompts): imgPrompt_idx = 0
-                cur_imgPath = args.image_prompts[imgPrompt_idx]
+                if img_prm_idx >= len(args.image_prompts): img_prm_idx = 0
+                cur_imgPath = args.image_prompts[img_prm_idx]
                 path, weight, stop = feedImg(cur_imgPath)
                 print(f"\nUse Image: {cur_imgPath} ||Weight: {weight} ||Stop: {stop}")
-                imgPrompt_idx += 1
+                img_prm_idx += 1
+
+            # ◼︎ noise prompts
+            if args.noise_prompt_seeds:
+                seeds, weights = feedNoises()
+                print(f"\nnoise seed: {seeds} ||Weight: {weights}")
+
 
         # ◼︎ Starts Training
         progress_bar.draw(i)
