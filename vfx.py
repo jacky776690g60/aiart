@@ -10,25 +10,25 @@ import numpy as np
 from numpy.random import randint
 
 import torch
-import kornia.augmentation as K
+import kornia.augmentation as Korn
 from torch import nn
 
 
 class KorniaAug(Enum):
-    Jt  = lambda : K.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1, p=0.7)
-    Jg  = lambda : K.ColorJiggle(contrast=.2, saturation=1.1)
-    Rsh = lambda : K.RandomSharpness(sharpness=0.3, p=0.5)
-    Rse = lambda : K.RandomPerspective(distortion_scale=0.5, p=0.7)
-    Rso = lambda : K.RandomRotation(degrees=15, p=0.7)
-    Ra  = lambda : K.RandomAffine(degrees=15, translate=0.1, shear=5, p=0.7, padding_mode='zeros', keepdim=True)
-    Rst = lambda : K.RandomElasticTransform(p=0.7)
-    Rss = lambda : K.RandomThinPlateSpline(scale=0.8, same_on_batch=True, p=0.7)
-    Rsr = lambda : K.RandomErasing(scale=(.1, .4), ratio=(.3, 1/.3), same_on_batch=True, p=0.7)
-    Rsn = lambda : K.RandomGaussianNoise(mean=0.0, std=1., p=0.5)
-    Rgb = lambda : K.RandomGaussianBlur(keepdim=(5, 5), sigma=(), border_type="reflect", p=0.2)
-    Rbb = lambda : K.RandomBoxBlur(border_type="reflect", p=0.2)
-    Rc  = lambda cutSize=1: K.RandomCrop(size=(cutSize, cutSize), pad_if_needed=True, padding_mode='reflect', p=0.5)
-    Rrc = lambda cutSize=1: K.RandomResizedCrop(size=(cutSize, cutSize), scale=(0.1,1),  ratio=(0.75,1.333), cropping_mode='resample', p=0.5)
+    Jt  = lambda : Korn.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1, p=0.7)
+    Jg  = lambda : Korn.ColorJiggle(contrast=.2, saturation=1.1)
+    Rsh = lambda : Korn.RandomSharpness(sharpness=0.3, p=0.5)
+    Rse = lambda : Korn.RandomPerspective(distortion_scale=0.5, p=0.7)
+    Rso = lambda : Korn.RandomRotation(degrees=15, p=0.7)
+    Ra  = lambda : Korn.RandomAffine(degrees=15, translate=0.1, shear=5, p=0.7, padding_mode='zeros', keepdim=True)
+    Rst = lambda : Korn.RandomElasticTransform(p=0.7)
+    Rss = lambda : Korn.RandomThinPlateSpline(scale=0.8, same_on_batch=True, p=0.7)
+    Rsr = lambda : Korn.RandomErasing(scale=(.1, .4), ratio=(.3, 1/.3), same_on_batch=True, p=0.7)
+    Rsn = lambda : Korn.RandomGaussianNoise(mean=0.0, std=1., p=0.5)
+    Rgb = lambda : Korn.RandomGaussianBlur(keepdim=(5, 5), sigma=(), border_type="reflect", p=0.2)
+    Rbb = lambda : Korn.RandomBoxBlur(border_type="reflect", p=0.2)
+    Rc  = lambda cutSize=1: Korn.RandomCrop(size=(cutSize, cutSize), pad_if_needed=True, padding_mode='reflect', p=0.5)
+    Rrc = lambda cutSize=1: Korn.RandomResizedCrop(size=(cutSize, cutSize), scale=(0.1,1),  ratio=(0.75,1.333), cropping_mode='resample', p=0.5)
 
 
 class AugmentationSTK(nn.Module):
