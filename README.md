@@ -1,6 +1,6 @@
 ## AI Generated Art
 
-This is a AI art generator using VQGAN+CLIP. More info and updates coming up soon.
+This is an AI art generator using VQGAN+CLIP. More info and updates coming up soon.
 
 #### Some sample images:
 
