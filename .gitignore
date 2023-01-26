@@ -1,12 +1,8 @@
 CLIP/
-guided-diffusion/
-latent-diffusion/
-ResizeRight/
 __pycache__/
 */__pycache__/
 content/
 checkpoints/
-stable-diffusion/
 taming-transformers/
 taming/
 venv/
