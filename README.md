@@ -24,4 +24,4 @@ Use `accent` flag to put emphasize on certain color ranges
     - vqgan_imagenet_f16_16384.yaml
 - Hopefully, you have GPU available; otherwise, it will be pretty slow
 - [optional] clone upscaler to scale up the final result
-    - `git clone https://github.com/jacky776690g60/upscaler.git`
+    - you can get it <a href="https://github.com/jacky776690g60/upscaler.git">here</a>
