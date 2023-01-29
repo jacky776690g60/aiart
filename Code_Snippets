@@ -1,4 +1,4 @@
 ####################
 # vqgan
 ####################
-python vqgan.py -rs 128 128 -i 500 -s output/out.png -tp "Russian squirrel"
+python vqgan.py -rs 128 128 -i 500 -s output/out.png -tp "Russian squirrel" -acc redish
