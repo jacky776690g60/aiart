@@ -18,6 +18,7 @@ Use `accent` flag to put emphasize on certain color ranges
 - clone these repositories to root dir
   - `git clone https://github.com/openai/CLIP`
   - `git clone https://github.com/CompVis/taming-transformers`
+  - `clone this as well <a href="https://github.com/jacky776690g60/torchtools/tree/main">torchtools</a>`
 - you will need the vqgan pretrained model (put them in a folder called "checkpoints")
     - vqgan_imagenet_f16_16384.ckpt
     - vqgan_imagenet_f16_16384.yaml
